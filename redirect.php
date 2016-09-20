@@ -17,7 +17,7 @@ function is_enabled( $mapping = null ) {
 	 * be mapped too, simply filter here.
 	 *
 	 * @param boolean $is_active Should the mapping be treated as active?
-	 * @param Mapping $mapping Mapping that we're inspecting
+	 * @param Mapping $mapping   Mapping that we're inspecting
 	 */
 	return apply_filters( 'mercator.redirect.enabled', $mapping->is_active(), $mapping );
 }
@@ -60,6 +60,12 @@ function handle_redirect() {
 		return;
 	}
 
+	// Support for alias as primary domain
+	if ( use_legacy_redirect() ) {
+		legacy_redirect();
+		return;
+	}
+
 	// Get mapping if it exists, if we're already on the primary domain we'll exit here
 	$mapping = Mapping::get_by_domain( $_SERVER['HTTP_HOST'] );
 	if ( is_wp_error( $mapping ) || ! $mapping ) {
@@ -67,12 +73,6 @@ function handle_redirect() {
 	}
 
 	if ( ! is_enabled( $mapping ) ) {
-		return;
-	}
-
-	// Support for alias as primary domain
-	if ( use_legacy_redirect() ) {
-		legacy_redirect( $mapping );
 		return;
 	}
 
@@ -84,28 +84,35 @@ function handle_redirect() {
 /**
  * Check if the main site domain contains the network hostname
  * and use the first active alias if so
- *
- * @param Mapping $mapping
  */
-function legacy_redirect( $mapping ) {
-	if ( false !== strpos( $mapping->get_site()->domain, get_current_site()->domain ) ) {
-		$mappings = Mapping::get_by_site( $mapping->get_site_id() );
-		foreach( $mappings as $mapping ) {
-			if ( ! is_enabled( $mapping ) ) {
-				continue;
-			}
+function legacy_redirect() {
+	$site = get_site( get_current_blog_id() );
 
-			// Redirect if the mapping isn't the current domain, bail if it is to avoid a redirect loop
-			if ( $mapping->get_domain() !== $_SERVER['HTTP_HOST'] ) {
-				wp_redirect( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
-				exit;
-			} else {
-				break;
-			}
+	// Check the blog domain isn't a subdomain or subfolder
+	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
+		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
+			wp_redirect( 'http://' . $site->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
+			exit;
 		}
-	} else {
-		// Use blogs table domain as the primary domain
-		wp_redirect( 'http://' . $mapping->get_site()->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
-		exit;
+		return;
+	}
+
+	$mappings = Mapping::get_by_site( get_current_blog_id() );
+	if ( is_wp_error( $mappings ) || ! $mappings ) {
+		return;
+	}
+
+	foreach ( $mappings as $mapping ) {
+		if ( ! is_enabled( $mapping ) ) {
+			continue;
+		}
+
+		// Redirect to the first active alias if we're not there already
+		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
+			wp_redirect( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
+			exit;
+		} else {
+			break;
+		}
 	}
 }
