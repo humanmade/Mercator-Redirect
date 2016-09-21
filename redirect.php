@@ -56,7 +56,7 @@ function handle_redirect() {
 	}
 
 	// Should we redirect visits to the admin?
-	if ( is_admin() && ! redirect_admin() ) {
+	if ( ( is_admin() || $GLOBALS['pagenow'] === 'wp-login.php' ) && ! redirect_admin() ) {
 		return;
 	}
 
