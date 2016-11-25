@@ -60,6 +60,11 @@ function handle_redirect() {
 		return;
 	}
 
+	// Don't redirect REST API requests
+	if ( 0 === strpos( $_SERVER['REQUEST_URI'], parse_url( rest_url(), PHP_URL_PATH ) ) ) {
+		return;
+	}
+
 	// Support for alias as primary domain
 	if ( use_legacy_redirect() ) {
 		legacy_redirect();
