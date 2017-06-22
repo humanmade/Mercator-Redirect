@@ -60,8 +60,9 @@ function handle_redirect() {
 		return;
 	}
 
+
 	// Don't redirect REST API requests
-	if ( 0 === strpos( $_SERVER['REQUEST_URI'], parse_url( rest_url(), PHP_URL_PATH ) ) ) {
+	if ( defined('REST_REQUEST') && REST_REQUEST ) {
 		return;
 	}
 
@@ -81,8 +82,14 @@ function handle_redirect() {
 		return;
 	}
 
+	// If current domain and domain mapping are the same, exit early.
+	$domain = $mapping->get_site()->domain;
+	if ( $domain == $_SERVER['HTTP_HOST'] ) {
+		return;
+	}
+
 	// Use blogs table domain as the primary domain
-	wp_redirect( 'http://' . $mapping->get_site()->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
+	wp_redirect( set_url_scheme( "http://" . $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
 	exit;
 }
 
@@ -96,7 +103,7 @@ function legacy_redirect() {
 	// Check the blog domain isn't a subdomain or subfolder
 	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
 		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
-			wp_redirect( 'http://' . $site->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
+			wp_redirect( set_url_scheme( 'http://' . $site->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
 			exit;
 		}
 		return;
@@ -114,7 +121,7 @@ function legacy_redirect() {
 
 		// Redirect to the first active alias if we're not there already
 		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
-			wp_redirect( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
+			wp_redirect( set_url_scheme( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
 			exit;
 		} else {
 			break;

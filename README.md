@@ -55,6 +55,9 @@ Defaults to `false`
 add_filter( 'mercator.redirect.legacy.enabled', '__return_true' );
 ```
 
+**mercator.redirect.status.code**
+
+Defaults to 301
 
 ## License
 Mercator is licensed under the GPLv3 or later.
