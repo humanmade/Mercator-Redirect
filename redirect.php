@@ -104,7 +104,6 @@ function legacy_redirect() {
 	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
 		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
 			redirect( $site->domain );
-			exit;
 		}
 
 		return;
