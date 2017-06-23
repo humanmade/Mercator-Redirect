@@ -17,7 +17,7 @@ function is_enabled( $mapping = null ) {
 	 * be mapped too, simply filter here.
 	 *
 	 * @param boolean $is_active Should the mapping be treated as active?
-	 * @param Mapping $mapping   Mapping that we're inspecting
+	 * @param Mapping $mapping Mapping that we're inspecting
 	 */
 	return apply_filters( 'mercator.redirect.enabled', $mapping->is_active(), $mapping );
 }
@@ -62,13 +62,14 @@ function handle_redirect() {
 
 
 	// Don't redirect REST API requests
-	if ( defined('REST_REQUEST') && REST_REQUEST ) {
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 		return;
 	}
 
 	// Support for alias as primary domain
 	if ( use_legacy_redirect() ) {
 		legacy_redirect();
+
 		return;
 	}
 
@@ -84,13 +85,12 @@ function handle_redirect() {
 
 	// If current domain and domain mapping are the same, exit early.
 	$domain = $mapping->get_site()->domain;
-	if ( $domain == $_SERVER['HTTP_HOST'] ) {
+	if ( $domain === $_SERVER['HTTP_HOST'] ) {
 		return;
 	}
 
 	// Use blogs table domain as the primary domain
-	wp_redirect( set_url_scheme( "http://" . $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
-	exit;
+	redirect( $domain );
 }
 
 /**
@@ -103,9 +103,10 @@ function legacy_redirect() {
 	// Check the blog domain isn't a subdomain or subfolder
 	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
 		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
-			wp_redirect( set_url_scheme( 'http://' . $site->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
+			redirect( $site->domain );
 			exit;
 		}
+
 		return;
 	}
 
@@ -121,10 +122,20 @@ function legacy_redirect() {
 
 		// Redirect to the first active alias if we're not there already
 		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
-			wp_redirect( set_url_scheme( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ) ), apply_filters( 'mercator.redirect.status.code', 301 ) );
-			exit;
+			redirect( $mapping->get_domain() );
 		} else {
 			break;
 		}
 	}
+}
+
+/**
+ * Helper function to redirect to url
+ * @param $domain
+ */
+function redirect( $domain ) {
+	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
+	$domain      = set_url_scheme( "http://" . $domain );
+	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
+	exit;
 }
