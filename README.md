@@ -55,6 +55,14 @@ Defaults to `false`
 add_filter( 'mercator.redirect.legacy.enabled', '__return_true' );
 ```
 
+**mercator.redirect.status.code**
+
+Defaults to 301
+
+```php
+// Change http redirect from 301 to 302.
+add_filter( 'mercator.redirect.status.code', function() { return 302; } );
+```
 
 ## License
 Mercator is licensed under the GPLv3 or later.

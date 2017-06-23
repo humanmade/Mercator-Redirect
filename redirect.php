@@ -17,7 +17,7 @@ function is_enabled( $mapping = null ) {
 	 * be mapped too, simply filter here.
 	 *
 	 * @param boolean $is_active Should the mapping be treated as active?
-	 * @param Mapping $mapping   Mapping that we're inspecting
+	 * @param Mapping $mapping Mapping that we're inspecting
 	 */
 	return apply_filters( 'mercator.redirect.enabled', $mapping->is_active(), $mapping );
 }
@@ -60,8 +60,9 @@ function handle_redirect() {
 		return;
 	}
 
+
 	// Don't redirect REST API requests
-	if ( 0 === strpos( $_SERVER['REQUEST_URI'], parse_url( rest_url(), PHP_URL_PATH ) ) ) {
+	if ( defined( 'REST_REQUEST' ) && REST_REQUEST ) {
 		return;
 	}
 
@@ -81,9 +82,14 @@ function handle_redirect() {
 		return;
 	}
 
+	// If current domain and domain mapping are the same, exit early.
+	$domain = $mapping->get_site()->domain;
+	if ( $domain === $_SERVER['HTTP_HOST'] ) {
+		return;
+	}
+
 	// Use blogs table domain as the primary domain
-	wp_redirect( 'http://' . $mapping->get_site()->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
-	exit;
+	redirect( $domain );
 }
 
 /**
@@ -96,9 +102,9 @@ function legacy_redirect() {
 	// Check the blog domain isn't a subdomain or subfolder
 	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
 		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
-			wp_redirect( 'http://' . $site->domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
-			exit;
+			redirect( $site->domain );
 		}
+
 		return;
 	}
 
@@ -114,10 +120,21 @@ function legacy_redirect() {
 
 		// Redirect to the first active alias if we're not there already
 		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
-			wp_redirect( 'http://' . $mapping->get_domain() . esc_url_raw( $_SERVER['REQUEST_URI'] ), 301 );
-			exit;
+			redirect( $mapping->get_domain() );
 		} else {
 			break;
 		}
 	}
+}
+
+/**
+ * Helper function to redirect to url
+ *
+ * @param string $domain
+ */
+function redirect( $domain ) {
+	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
+	$domain      = set_url_scheme( "http://{$domain}" );
+	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
+	exit;
 }
