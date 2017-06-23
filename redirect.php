@@ -69,7 +69,6 @@ function handle_redirect() {
 	// Support for alias as primary domain
 	if ( use_legacy_redirect() ) {
 		legacy_redirect();
-
 		return;
 	}
 
@@ -130,11 +129,12 @@ function legacy_redirect() {
 
 /**
  * Helper function to redirect to url
- * @param $domain
+ *
+ * @param string $domain
  */
 function redirect( $domain ) {
 	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
-	$domain      = set_url_scheme( "http://" . $domain );
+	$domain      = set_url_scheme( "http://{$domain}" );
 	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
 	exit;
 }
