@@ -121,8 +121,9 @@ function legacy_redirect() {
 
 		// Redirect to the first active alias if we're not there already
 		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
-			$site   = $mapping->get_site();
-			redirect( $site->domain . $site->path );
+			$domain = $mapping->get_domain();
+			$path   = $mapping->get_site()->path;
+			redirect( $domain . $path );
 		} else {
 			break;
 		}
@@ -136,7 +137,7 @@ function legacy_redirect() {
  */
 function redirect( $url ) {
 	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
-	$domain      = set_url_scheme( "http://{$url}" );
+	$domain      = untrailingslashit( set_url_scheme( "http://{$url}" ) );
 	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
 	exit;
 }
