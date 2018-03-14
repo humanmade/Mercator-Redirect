@@ -83,13 +83,14 @@ function handle_redirect() {
 	}
 
 	// If current domain and domain mapping are the same, exit early.
-	$domain = $mapping->get_site()->domain;
+	$site   = $mapping->get_site();
+	$domain = $site->domain;
 	if ( $domain === $_SERVER['HTTP_HOST'] ) {
 		return;
 	}
-
+	$path = $site->path;
 	// Use blogs table domain as the primary domain
-	redirect( $domain );
+	redirect( $domain . $path );
 }
 
 /**
@@ -102,7 +103,7 @@ function legacy_redirect() {
 	// Check the blog domain isn't a subdomain or subfolder
 	if ( false === strpos( $site->domain, get_current_site()->domain ) ) {
 		if ( $_SERVER['HTTP_HOST'] !== $site->domain ) {
-			redirect( $site->domain );
+			redirect( $site->domain . $site->path );
 		}
 
 		return;
@@ -120,7 +121,9 @@ function legacy_redirect() {
 
 		// Redirect to the first active alias if we're not there already
 		if ( $_SERVER['HTTP_HOST'] !== $mapping->get_domain() ) {
-			redirect( $mapping->get_domain() );
+			$domain = $mapping->get_domain();
+			$path   = $mapping->get_site()->path;
+			redirect( $domain . $path );
 		} else {
 			break;
 		}
@@ -130,11 +133,11 @@ function legacy_redirect() {
 /**
  * Helper function to redirect to url
  *
- * @param string $domain
+ * @param string $url
  */
-function redirect( $domain ) {
+function redirect( $url ) {
 	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
-	$domain      = set_url_scheme( "http://{$domain}" );
+	$domain      = untrailingslashit( set_url_scheme( "http://{$url}" ) );
 	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
 	exit;
 }
