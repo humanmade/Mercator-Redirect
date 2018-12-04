@@ -2,7 +2,6 @@
 	"name": "humanmade/mercator-redirect",
 	"description": "Redirect component for Mercator.",
 	"homepage": "https://github.com/humanmade/Mercator-Redirect",
-	"version": "1.0.0",
 	"keywords": [
 		"wordpress"
 	],
@@ -17,6 +16,6 @@
 	"type": "wordpress-muplugin",
 	"require": {
 		"composer/installers": "~1.0",
-		"humanmade/mercator": "~1.0"
+		"humanmade/mercator": "~2.0"
 	 }
 }
