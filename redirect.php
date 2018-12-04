@@ -66,6 +66,26 @@ function handle_redirect() {
 		return;
 	}
 
+	// Disable redirect on WP CLI.
+	if ( defined( 'WP_CLI' ) && WP_CLI ) {
+		return;
+	}
+
+	// Disable for XML RPC.
+	if ( defined( 'XMLRPC_REQUEST' ) && XMLRPC_REQUEST ) {
+		return;
+	}
+
+	// Disable redirects for crons.
+	if ( defined( 'DOING_CRON' ) && DOING_CRON ) {
+		return;
+	}
+
+	// Disable redirects for admin ajax.
+	if ( defined( 'DOING_AJAX' ) && DOING_AJAX ) {
+		return;
+	}
+
 	// Support for alias as primary domain
 	if ( use_legacy_redirect() ) {
 		legacy_redirect();
