@@ -16,6 +16,6 @@
 	"type": "wordpress-muplugin",
 	"require": {
 		"composer/installers": "~1.0",
-		"humanmade/mercator": "~2.0"
+		"humanmade/mercator": "~1.0 || ~2.0"
 	 }
 }
