@@ -156,8 +156,14 @@ function legacy_redirect() {
  * @param string $url
  */
 function redirect( $url ) {
+	$site        = get_site( get_current_blog_id() );
 	$status_code = (int) apply_filters( 'mercator.redirect.status.code', 301 );
 	$domain      = untrailingslashit( set_url_scheme( "http://{$url}" ) );
-	wp_redirect( $domain . esc_url_raw( $_SERVER['REQUEST_URI'] ), $status_code );
+
+	// Determine the redirect path, removing the site's path.
+	$path = $_SERVER['REQUEST_URI'];
+	$path = preg_replace( '/^' . preg_quote( $site->path ) . '/', '', $path );
+
+	wp_redirect( esc_url_raw( $domain . '/' . ltrim( $path . '/' ) ), $status_code );
 	exit;
 }
